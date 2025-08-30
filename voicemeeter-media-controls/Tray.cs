@@ -33,7 +33,7 @@ namespace vmMedia
             (2, 6, "Voicemeeter AUX"),
             (2, 7, "Voicemeeter VAIO3")
         };
-        private static List<(int, string)> _currentStripNames => getStripNames();
+        //private static List<(int, string)> _currentStripNames => getStripNames();
 
         public Tray()
         {
@@ -271,15 +271,10 @@ namespace vmMedia
             }
         }
 
-        private static List<(int, string)> getStripNames()
-        {
-            var names = new List<(int, string)>();
-            foreach (var strip in _strips)
-            {
-                names.Add((strip, GetStripName(strip)));
-            }
-            return names;
-        }
+        //private static List<(int, string)> getStripNames()
+        //{
+        //    return new List<(int, string)> { };
+        //}
 
         #region structs, imports, etc
         private const int WH_KEYBOARD_LL = 13;
