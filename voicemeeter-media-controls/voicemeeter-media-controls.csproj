@@ -9,6 +9,20 @@
     <UseWindowsForms>True</UseWindowsForms>
     <SupportedOSPlatformVersion>10.0.17763.0</SupportedOSPlatformVersion>
     <Platforms>AnyCPU;x64</Platforms>
+    <ApplicationIcon>Assets\VMMC.ico</ApplicationIcon>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="Assets\VMMC.ico" />
+    <None Remove="VMMC.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Assets\VMMC.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Assets\VMMC.ico" />
+  </ItemGroup>
 
 </Project>

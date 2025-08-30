@@ -80,8 +80,6 @@ namespace vmMedia
             stripSelectionItem.DropDownItems.Add(_host);
             _trayMenu.Items.Add(stripSelectionItem);
 
-
-
             var muteItem = _trayMenu.Items.Add("Toggle Mute", null, (_, _) =>
             {
                 bool currentMute = GetMuteState(_currentStrip);
@@ -98,11 +96,13 @@ namespace vmMedia
                 string action = isMuted ? "Unmute" : "Mute";
                 muteItem.Text = $"{action} {stripName}";
             };
+            var assmebly = System.Reflection.Assembly.GetExecutingAssembly();
+            using var stream = assmebly.GetManifestResourceStream("voicemeeter_media.Assets.VMMC.ico");
 
             _trayIcon = new NotifyIcon
             {
-                Text = "Voicemeeter Media",
-                Icon = SystemIcons.Application,
+                Text = "Voicemeeter Media Controls",
+                Icon = stream != null ? new Icon(stream) : SystemIcons.Application,
                 ContextMenuStrip = _trayMenu,
                 Visible = true
             };
