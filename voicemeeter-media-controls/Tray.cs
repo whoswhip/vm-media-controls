@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Text.Json;
 
 namespace vmMedia
 {
@@ -9,7 +10,7 @@ namespace vmMedia
         private readonly NotifyIcon _trayIcon;
         private readonly ContextMenuStrip _trayMenu;
         private int _currentStrip = 5;
-        private static readonly int[] _strips = [5, 6, 7]; // when using voicemeeter potato these are the virutal inputs
+        private static int[] _strips = [5, 6, 7]; // when using voicemeeter potato these are the virutal inputs
         private float amountToAdjust = 1.0f;
         private readonly OverlayForm _overlay = new();
         private static readonly List<(int vmType, int index, string name)> _stripNames = new() // voicemeeter type, index, default name // 0 = standard, 1 = banana, 2 = potato
@@ -33,7 +34,10 @@ namespace vmMedia
             (2, 6, "Voicemeeter AUX"),
             (2, 7, "Voicemeeter VAIO3")
         };
-        //private static List<(int, string)> _currentStripNames => getStripNames();
+        private static List<(int, string)> _currentStripNames = new List<(int, string)>();
+        private CheckedListBox _stripSelector;
+        private ToolStripControlHost _host;
+        private static bool _initialized = false;
 
         public Tray()
         {
@@ -43,6 +47,41 @@ namespace vmMedia
             Opacity = 0;
 
             _trayMenu = new ContextMenuStrip();
+
+            _stripSelector = new CheckedListBox
+            {
+                CheckOnClick = true,
+                BorderStyle = BorderStyle.None
+            };
+
+            _stripSelector.ItemCheck += (sender, e) =>
+            {
+                BeginInvoke(new Action(() =>
+                {
+                    var checkedItems = _stripSelector.CheckedItems.Cast<string>().ToList();
+                    _strips = _currentStripNames.Where(x => checkedItems.Contains(x.Item2)).Select(x => x.Item1).ToArray();
+                    if (_strips.Length == 0)
+                    {
+                        _stripSelector.SetItemChecked(e.Index, true);
+                        _strips = _currentStripNames.Where(x => checkedItems.Contains(x.Item2)).Select(x => x.Item1).ToArray();
+                    }
+                    if (!_strips.Contains(_currentStrip))
+                    {
+                        _currentStrip = _strips[0];
+                    }
+                }));
+            };
+            _host = new ToolStripControlHost(_stripSelector)
+            {
+                AutoSize = false,
+                Size = new Size(200, 100)
+            };
+            var stripSelectionItem = new ToolStripMenuItem("Strip Selection");
+            stripSelectionItem.DropDownItems.Add(_host);
+            _trayMenu.Items.Add(stripSelectionItem);
+
+
+
             var muteItem = _trayMenu.Items.Add("Toggle Mute", null, (_, _) =>
             {
                 bool currentMute = GetMuteState(_currentStrip);
@@ -51,7 +90,7 @@ namespace vmMedia
                 string name = GetStripName(_currentStrip);
                 ShowOverlayVolume(name, gain, !currentMute);
             });
-            _trayMenu.Items.Add("Exit", null, (_, _) => Application.Exit());
+            _trayMenu.Items.Add("Exit", null, (_, _) => Close());
             _trayMenu.Opening += (sender, e) =>
             {
                 bool isMuted = GetMuteState(_currentStrip);
@@ -73,6 +112,16 @@ namespace vmMedia
         {
             base.OnHandleCreated(e);
             InitVoicemeeter();
+            _currentStripNames = getStripNames();
+            InitConfig();
+            _stripSelector.Items.Clear();
+            foreach (var (index, name) in _currentStripNames)
+            {
+                int i = _stripSelector.Items.Add(name);
+                if (_strips.Contains(index))
+                    _stripSelector.SetItemChecked(i, true);
+            }
+            _host.Size = new Size(200, _stripSelector.Items.Count * _stripSelector.ItemHeight + 4);
         }
 
         protected override void OnFormClosing(FormClosingEventArgs e)
@@ -86,6 +135,7 @@ namespace vmMedia
                 try { UnhookWindowsHookEx(_hookId); } catch { }
                 _hookId = IntPtr.Zero;
             }
+            SaveConfig();
         }
 
         private void InitVoicemeeter()
@@ -97,6 +147,14 @@ namespace vmMedia
                 {
                     MessageBox.Show("Failed to login to Voicemeeter: " + login, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     Application.Exit();
+                }
+                else
+                {
+                    if (!_initialized)
+                    {
+                        _initialized = true;
+                        _overlay.Show();
+                    }
                 }
             }
             catch (DllNotFoundException)
@@ -116,6 +174,14 @@ namespace vmMedia
                         {
                             MessageBox.Show("Failed to login to Voicemeeter: " + login, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                             Application.Exit();
+                        }
+                        else
+                        {
+                            if (!_initialized)
+                            {
+                                _initialized = true;
+                                _overlay.Show();
+                            }
                         }
                     }
                 }
@@ -271,10 +337,98 @@ namespace vmMedia
             }
         }
 
-        //private static List<(int, string)> getStripNames()
-        //{
-        //    return new List<(int, string)> { };
-        //}
+        private static List<(int, string)> getStripNames()
+        {
+            var nb = VoicemeeterRemote.VBVMR_Input_GetDeviceNumber(); // total number of strips
+            var list = new List<(int, string)>();
+
+            for (int i = 0; i < nb; i++)
+            {
+                string name = GetStripName(i);
+                list.Add((i, name));
+            }
+            return list;
+        }
+
+        private void InitConfig()
+        {
+            string appdata = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+            string configDir = Path.Combine(appdata, "VMMC");
+            if (!Directory.Exists(configDir))
+                Directory.CreateDirectory(configDir);
+
+            string configFile = Path.Combine(configDir, "config.json");
+            if (File.Exists(configFile))
+            {
+                try
+                {
+                    var json = File.ReadAllText(configFile);
+                    var config = JsonSerializer.Deserialize<Dictionary<string, object>>(json);
+                    if (config != null)
+                    {
+                        if (config.ContainsKey("amountToAdjust"))
+                        {
+                            if (float.TryParse(config["amountToAdjust"].ToString(), out float amt))
+                            {
+                                if (amt > 0 && amt <= 12)
+                                    amountToAdjust = amt;
+                            }
+                        }
+                        if (config.ContainsKey("strips"))
+                        {
+                            if (config["strips"] is JsonElement stripsElement && stripsElement.ValueKind == JsonValueKind.Array)
+                            {
+                                var stripList = new List<int>();
+                                foreach (var strip in stripsElement.EnumerateArray())
+                                {
+                                    if (strip.TryGetInt32(out int stripIndex))
+                                    {
+                                        stripList.Add(stripIndex);
+                                    }
+                                }
+                                _strips = stripList.ToArray();
+                                _strips = _strips.Where(s => _currentStripNames.Any(c => c.Item1 == s)).ToArray();
+                                if (_strips.Length == 0 && _currentStripNames.Count > 0)
+                                    _strips = [_currentStripNames[0].Item1];
+                                if (!_strips.Contains(_currentStrip))
+                                    _currentStrip = _strips.Length > 0 ? _strips[0] : 5;
+                            }
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"Failed to read config: {ex}");
+                }
+            }
+            else
+            {
+                SaveConfig();
+            }
+        }
+
+        private void SaveConfig()
+        {
+            string appdata = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+            string configDir = Path.Combine(appdata, "VMMC");
+            if (!Directory.Exists(configDir))
+                Directory.CreateDirectory(configDir);
+            string configFile = Path.Combine(configDir, "config.json");
+            var config = new Dictionary<string, object>
+            {
+                { "amountToAdjust", amountToAdjust },
+                { "strips", _strips }
+            };
+            try
+            {
+                var json = JsonSerializer.Serialize(config, new JsonSerializerOptions { WriteIndented = true });
+                File.WriteAllText(configFile, json);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Failed to write config: {ex}");
+            }
+        }
 
         #region structs, imports, etc
         private const int WH_KEYBOARD_LL = 13;
@@ -344,6 +498,8 @@ namespace vmMedia
             public static extern int VBVMR_GetParameterFloat(string szParamName, ref float value);
             [DllImport("VoicemeeterRemote64.dll", CallingConvention = CallingConvention.StdCall)]
             public static extern int VBVMR_IsParametersDirty();
+            [DllImport("VoicemeeterRemote64.dll", CallingConvention = CallingConvention.StdCall)]
+            public static extern int VBVMR_Input_GetDeviceNumber();
 
         }
         #endregion
