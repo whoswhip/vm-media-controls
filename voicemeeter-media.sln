@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.14.36203.30 d17.14
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "voicemeeter-media", "voicemeeter-media\voicemeeter-media.csproj", "{EFFEB01F-63E8-4564-A3E5-FD8A9454F3ED}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "voicemeeter-media-controls", "voicemeeter-media-controls\voicemeeter-media-controls.csproj", "{EFFEB01F-63E8-4564-A3E5-FD8A9454F3ED}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
