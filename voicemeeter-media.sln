@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36203.30 d17.14
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "voicemeeter-media", "voicemeeter-media\voicemeeter-media.csproj", "{EFFEB01F-63E8-4564-A3E5-FD8A9454F3ED}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Debug|x64 = Debug|x64
+		Release|Any CPU = Release|Any CPU
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{EFFEB01F-63E8-4564-A3E5-FD8A9454F3ED}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EFFEB01F-63E8-4564-A3E5-FD8A9454F3ED}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EFFEB01F-63E8-4564-A3E5-FD8A9454F3ED}.Debug|x64.ActiveCfg = Debug|x64
+		{EFFEB01F-63E8-4564-A3E5-FD8A9454F3ED}.Debug|x64.Build.0 = Debug|x64
+		{EFFEB01F-63E8-4564-A3E5-FD8A9454F3ED}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EFFEB01F-63E8-4564-A3E5-FD8A9454F3ED}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EFFEB01F-63E8-4564-A3E5-FD8A9454F3ED}.Release|x64.ActiveCfg = Release|x64
+		{EFFEB01F-63E8-4564-A3E5-FD8A9454F3ED}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {3411A217-E8B8-4530-8E4A-88F8BFC3D2D8}
+	EndGlobalSection
+EndGlobal
