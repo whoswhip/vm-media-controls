@@ -7,4 +7,4 @@ Voicemeeter Media Controls (VMMC) intercepts the Volume Up, Volume Down, and Mut
 - Mute -> Cycle through strips
 
 ## TODO
-- [ ] Full support for Voicemeeter Standard and Banana
+- [X] Full support for Voicemeeter Standard and Banana
