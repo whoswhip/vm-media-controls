@@ -172,7 +172,14 @@ namespace vmMedia
                         var login = VoicemeeterRemote.VBVMR_Login();
                         if (login != 0)
                         {
-                            MessageBox.Show("Failed to login to Voicemeeter: " + login, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            MessageBox.Show("Failed to login to Voicemeeter: " + login, "Error\n Trying again in 5 seconds.", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            Thread.Sleep(6000); // 6 seconds instead of 5 just incase, voicemeeter takes like 5 seconds to start the audio engine
+                            login = VoicemeeterRemote.VBVMR_Login();
+                            if (login != 0)
+                            {
+                                MessageBox.Show("Failed to login to Voicemeeter: " + login, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                Application.Exit();
+                            }
                             Application.Exit();
                         }
                         else
