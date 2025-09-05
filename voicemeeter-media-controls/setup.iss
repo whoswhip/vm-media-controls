@@ -1,6 +1,6 @@
 [Setup]
 AppName=VoiceMeeter Media Controls
-AppVersion=1.0.0
+AppVersion=1.0.5
 DefaultDirName={pf}\VMMC
 DefaultGroupName=VoiceMeeter Media Controls
 OutputDir=bin\x64\Release\inno\

@@ -88,6 +88,9 @@ namespace vmMedia
                 string name = GetStripName(_currentStrip);
                 ShowOverlayVolume(name, gain, !currentMute);
             });
+            _trayMenu.Items.Add(new ToolStripSeparator());
+            var version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
+            _trayMenu.Items.Add($"Version {version}");
             _trayMenu.Items.Add("Exit", null, (_, _) => Close());
             _trayMenu.Opening += (sender, e) =>
             {
@@ -140,59 +143,62 @@ namespace vmMedia
 
         private void InitVoicemeeter()
         {
-            try
+            int login = LoginVoicemeeter();
+            if (login == 1)
             {
-                var login = VoicemeeterRemote.VBVMR_Login();
-                if (login != 0)
+                Thread.Sleep(6000);
+                login = LoginVoicemeeter();
+                if (login == 1)
                 {
-                    MessageBox.Show("Failed to login to Voicemeeter: " + login, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    Application.Exit();
-                }
-                else
-                {
-                    if (!_initialized)
+                    var result = MessageBox.Show("Voicemeeter is not running. Please start Voicemeeter and click retry, or exit.", "Voicemeeter Not Running", MessageBoxButtons.RetryCancel, MessageBoxIcon.Warning);
+                    if (result == DialogResult.Retry)
                     {
-                        _initialized = true;
-                        _overlay.Show();
+                        login = LoginVoicemeeter();
+                        if (login != 0)
+                        {
+                            MessageBox.Show("Failed to login to Voicemeeter: " + login, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            Application.Exit();
+                        }
+                    }
+                    else
+                    {
+                        Application.Exit();
                     }
                 }
+            }
+            if (login != 0)
+            {
+                MessageBox.Show("Failed to login to Voicemeeter: " + login, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                Application.Exit();
+            }
+            else
+            {
+                if (!_initialized)
+                {
+                    _initialized = true;
+                    _overlay.Show();
+                }
+            }
+        }
+
+        private int LoginVoicemeeter()
+        {
+            try
+            {
+                return VoicemeeterRemote.VBVMR_Login();
             }
             catch (DllNotFoundException)
             {
                 if (File.Exists(@"C:\Program Files (x86)\VB\Voicemeeter\VoicemeeterRemote64.dll"))
                 {
                     var lib = LoadLibrary(@"C:\Program Files (x86)\VB\Voicemeeter\VoicemeeterRemote64.dll");
-                    if (lib == IntPtr.Zero)
+                    if (lib != IntPtr.Zero)
                     {
-                        MessageBox.Show("Failed to load VoicemeeterRemote64.dll", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                        Application.Exit();
-                    }
-                    else
-                    {
-                        var login = VoicemeeterRemote.VBVMR_Login();
-                        if (login != 0)
-                        {
-                            MessageBox.Show("Failed to login to Voicemeeter: " + login, "Error\n Trying again in 5 seconds.", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                            Thread.Sleep(6000); // 6 seconds instead of 5 just incase, voicemeeter takes like 5 seconds to start the audio engine
-                            login = VoicemeeterRemote.VBVMR_Login();
-                            if (login != 0)
-                            {
-                                MessageBox.Show("Failed to login to Voicemeeter: " + login, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                                Application.Exit();
-                            }
-                            Application.Exit();
-                        }
-                        else
-                        {
-                            if (!_initialized)
-                            {
-                                _initialized = true;
-                                _overlay.Show();
-                            }
-                        }
+                        return VoicemeeterRemote.VBVMR_Login();
                     }
                 }
             }
+            return -1;
         }
         private IntPtr HookCallback(int nCode, IntPtr wParam, IntPtr lParam)
         {
