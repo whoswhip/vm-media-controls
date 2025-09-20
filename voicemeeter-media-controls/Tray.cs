@@ -2,6 +2,7 @@
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.Json;
+using voicemeeter_media;
 
 namespace vmMedia
 {
@@ -89,8 +90,7 @@ namespace vmMedia
                 ShowOverlayVolume(name, gain, !currentMute);
             });
             _trayMenu.Items.Add(new ToolStripSeparator());
-            var version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
-            _trayMenu.Items.Add($"Version {version}");
+            _trayMenu.Items.Add($"Version {UpdateManager.VersionString}");
             _trayMenu.Items.Add("Exit", null, (_, _) => Close());
             _trayMenu.Opening += (sender, e) =>
             {
@@ -125,6 +125,7 @@ namespace vmMedia
                     _stripSelector.SetItemChecked(i, true);
             }
             _host.Size = new Size(200, _stripSelector.Items.Count * _stripSelector.ItemHeight + 4);
+            UpdateManager.CheckForUpdates();
         }
 
         protected override void OnFormClosing(FormClosingEventArgs e)
